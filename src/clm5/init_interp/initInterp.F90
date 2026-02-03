@@ -290,32 +290,92 @@ contains
          'icol_vegetated_or_bare_soil', &
          subgrid_special_indices%icol_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_roof', &
+         subgrid_special_indices%icol_urban_roof)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_sunwall', &
+         subgrid_special_indices%icol_urban_sunwall)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_shadewall', &
+         subgrid_special_indices%icol_urban_shadewall)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_impervious_road', &
+         subgrid_special_indices%icol_urban_impervious_road)
+    status = pio_get_att(ncidi, pio_global, &
+         'icol_urban_pervious_road', &
+         subgrid_special_indices%icol_urban_pervious_road)
+    status = pio_get_att(ncidi, pio_global, &
          'ilun_vegetated_or_bare_soil', &
          subgrid_special_indices%ilun_vegetated_or_bare_soil)
     status = pio_get_att(ncidi, pio_global, &
          'ilun_crop', &
          subgrid_special_indices%ilun_crop)
     status = pio_get_att(ncidi, pio_global, &
-         'ilun_landice_multiple_elevation_classes', &
-         subgrid_special_indices%ilun_landice_multiple_elevation_classes)
+         'ilun_urban_tbd', &
+         subgrid_special_indices%ilun_urban_TBD)
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_urban_hd', &
+         subgrid_special_indices%ilun_urban_HD)
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_urban_md', &
+         subgrid_special_indices%ilun_urban_MD)
+
+ ! BACKWARDS_COMPATIBILITY(wjs, 2021-04-16) ilun_landice_multiple_elevation_classes has
+    ! been renamed to ilun_landice. For now we need to handle both possibilities for the
+    ! sake of old initial conditions files. There is a chance that we had ilun_landice
+    ! alongside ilun_landice_multiple_elevation_classes on really old initial conditions
+    ! files; in that case, we want to use ilun_landice_multiple_elevation_classes. Once we
+    ! can rely on all initial conditions files having the new behavior, we can remove this
+    ! check_att call and just assume there is an ilun_landice attribute.
+    call check_att(ncidi, pio_global, 'ilun_landice_multiple_elevation_classes', att_found)
+    if (att_found) then
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice_multiple_elevation_classes', &
+            subgrid_special_indices%ilun_landice)
+    else
+       status = pio_get_att(ncidi, pio_global, &
+            'ilun_landice', &
+            subgrid_special_indices%ilun_landice)
+    end if
+
     status = pio_get_att(ncidi, pio_global, &
          'created_glacier_mec_landunits', &
          created_glacier_mec_landunits)
 
-    if (masterproc) then
+
+
+
+     if (masterproc) then
        write(iulog,*)'ipft_not_vegetated                      = ' , &
             subgrid_special_indices%ipft_not_vegetated
        write(iulog,*)'icol_vegetated_or_bare_soil             = ' , &
             subgrid_special_indices%icol_vegetated_or_bare_soil
+       write(iulog,*)'icol_urban_roof                         = ' , &
+            subgrid_special_indices%icol_urban_roof
+       write(iulog,*)'icol_urban_sunwall                      = ' , &
+            subgrid_special_indices%icol_urban_sunwall
+       write(iulog,*)'icol_urban_shadewall                    = ' , &
+            subgrid_special_indices%icol_urban_shadewall
+       write(iulog,*)'icol_urban_impervious_road              = ' , &
+            subgrid_special_indices%icol_urban_impervious_road
+       write(iulog,*)'icol_urban_pervious_road                = ' , &
+            subgrid_special_indices%icol_urban_pervious_road
        write(iulog,*)'ilun_vegetated_or_bare_soil             = ' , &
             subgrid_special_indices%ilun_vegetated_or_bare_soil
        write(iulog,*)'ilun_crop                               = ' , &
             subgrid_special_indices%ilun_crop
-       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' , &
-            subgrid_special_indices%ilun_landice_multiple_elevation_classes
+       write(iulog,*)'ilun_urban_tbd = ' , &
+            subgrid_special_indices%ilun_urban_TBD
+       write(iulog,*)'ilun_urban_hd = ' , &
+            subgrid_special_indices%ilun_urban_HD
+       write(iulog,*)'ilun_urban_md = ' , &
+            subgrid_special_indices%ilun_urban_MD
+       write(iulog,*)'ilun_landice = ' , &
+            subgrid_special_indices%ilun_landice
        write(iulog,*)'create_glacier_mec_landunits            = ', &
             trim(created_glacier_mec_landunits)
     end if
+
 
     ! --------------------------------------------
     ! Find closest values for pfts, cols, landunits, gridcells
