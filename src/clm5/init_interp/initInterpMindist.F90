@@ -31,12 +31,20 @@ module initInterpMindist
 
   type, public :: subgrid_special_indices_type
      integer :: ipft_not_vegetated
-     integer :: icol_vegetated_or_bare_soil
+     integer :: icol_urban_roof
+     integer :: icol_urban_sunwall
+     integer :: icol_urban_shadewall
+     integer :: icol_urban_impervious_road
+     integer :: icol_urban_pervious_road
      integer :: ilun_vegetated_or_bare_soil
      integer :: ilun_crop
-     integer :: ilun_landice_multiple_elevation_classes
+     integer :: ilun_landice
+     integer :: ilun_urban_TBD
+     integer :: ilun_urban_HD
+     integer :: ilun_urban_MD
    contains
      procedure :: is_vegetated_landunit  ! returns true if the given landunit type is natural veg or crop
+     procedure :: is_urban_landunit      ! returns true if the given landunit type is urban
   end type subgrid_special_indices_type
 
   type, public :: subgrid_type
@@ -57,8 +65,10 @@ module initInterpMindist
   private :: set_glcmec_must_be_same_type
   private :: set_icemec_adjustable_type
   private :: do_fill_missing_with_natveg
+  private :: do_fill_missing_urban_with_HD
   private :: is_sametype
   private :: is_baresoil
+  private :: is_urban_HD
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -396,7 +406,8 @@ contains
                   subgridi = subgridi, subgrido = subgrido, &
                   subgrid_special_indices = subgrid_special_indices, &
                   glcmec_must_be_same_type = glcmec_must_be_same_type_o(no), &
-                  veg_patch_just_considers_ptype = .false.)
+                  veg_patch_just_considers_ptype = .false., &
+                  do_fill_missing_urban_with_HD = .false.)
              if (ni_sametype) then
                 if (found) then
                    write(iulog,*) subname// &
