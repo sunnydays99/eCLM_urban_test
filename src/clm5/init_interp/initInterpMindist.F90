@@ -191,7 +191,8 @@ contains
                      subgridi = subgridi, subgrido = subgrido, &
                      subgrid_special_indices = subgrid_special_indices, &
                      glcmec_must_be_same_type = glcmec_must_be_same_type_o(no), &
-                     veg_patch_just_considers_ptype = .true.)) then
+                     veg_patch_just_considers_ptype = .true., &
+                     do_fill_missing_urban_with_HD = .false.)) then
                    dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
                    dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
                         0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
