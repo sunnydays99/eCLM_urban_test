@@ -241,8 +241,6 @@ contains
     call ncd_pio_openfile (ncidi, trim(filei) , 0)
     call ncd_pio_openfile (ncido, trim(fileo),  ncd_write)
 
-    call copy_and_add_metadata(ncidi, ncido, filei)
-
     call check_interp_non_ciso_to_ciso(ncidi)
 
     ! --------------------------------------------
