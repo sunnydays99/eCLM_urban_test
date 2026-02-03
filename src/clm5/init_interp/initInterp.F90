@@ -73,6 +73,9 @@ module initInterpMod
   ! patch-level variables)
   logical :: init_interp_fill_missing_with_natveg
 
+  ! If true, fill missing urban landunit type with closest urban high density (HD) landunit
+  logical :: init_interp_fill_missing_urban_with_HD
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -104,11 +107,14 @@ contains
     !-----------------------------------------------------------------------
 
     namelist /clm_initinterp_inparm/ &
-         init_interp_method, init_interp_fill_missing_with_natveg
+         init_interp_method, init_interp_fill_missing_with_natveg, &
+         init_interp_fill_missing_urban_with_HD
 
     ! Initialize options to default values, in case they are not specified in the namelist
     init_interp_method = ' '
     init_interp_fill_missing_with_natveg = .false.
+    init_interp_fill_missing_urban_with_HD = .false.
+
 
     if (masterproc) then
        unitn = getavu()
@@ -128,6 +134,7 @@ contains
 
     call shr_mpi_bcast (init_interp_method, mpicom)
     call shr_mpi_bcast (init_interp_fill_missing_with_natveg, mpicom)
+    call shr_mpi_bcast (init_interp_fill_missing_urban_with_HD, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
@@ -781,6 +788,7 @@ contains
             glc_behavior=glc_behavior, &
             glc_elevclasses_same=glc_elevclasses_same, &
             fill_missing_with_natveg=init_interp_fill_missing_with_natveg, &
+            fill_missing_urban_with_HD=init_interp_fill_missing_urban_with_HD, &
             mindist_index=minindx)
     case (interp_method_finidat_areas)
        if (masterproc) then
