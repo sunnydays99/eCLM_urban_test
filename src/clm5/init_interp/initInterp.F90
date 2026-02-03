@@ -39,7 +39,6 @@ module initInterpMod
 
   ! Private methods
 
-  private :: copy_and_add_metadata
   private :: check_dim_subgrid
   private :: check_dim_level
   private :: skip_var
