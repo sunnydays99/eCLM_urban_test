@@ -23,7 +23,6 @@ module initInterpMod
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
   use restUtilMod    , only: iflag_copy, iflag_skip, iflag_area
-  use IssueFixedMetadataHandler, only : copy_issue_fixed_metadata
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
