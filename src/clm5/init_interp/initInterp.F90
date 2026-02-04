@@ -22,7 +22,7 @@ module initInterpMod
   use clm_varctl     , only: iulog
   use abortutils     , only: endrun
   use spmdMod        , only: masterproc
-  use restUtilMod    , only: iflag_copy, iflag_skip, iflag_area
+  use restUtilMod    , only: iflag_interp, iflag_copy, iflag_skip, iflag_area
   use glcBehaviorMod , only: glc_behavior_type
   use ncdio_utils    , only: find_var_on_file
   use ncdio_pio
