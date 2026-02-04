@@ -39,7 +39,7 @@ module initInterpMindist
      integer :: icol_urban_pervious_road
      integer :: ilun_vegetated_or_bare_soil
      integer :: ilun_crop
-     integer :: ilun_landice
+     integer :: ilun_landice_multiple_elevation_classes
      integer :: ilun_urban_TBD
      integer :: ilun_urban_HD
      integer :: ilun_urban_MD
@@ -751,8 +751,8 @@ contains
 
     if (trim(subgridi%name) == 'pft' .and. trim(subgrido%name) == 'pft') then
        if ( .not. glc_must_be_same_type .and. &
-            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice .and. &
-            subgrido%ltype(no) == subgrid_special_indices%ilun_landice) then
+            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice_multiple_elevation_classes .and. &
+            subgrido%ltype(no) == subgrid_special_indices%ilun_landice_multiple_elevation_classes) then
           is_sametype = .true.
        else if (veg_patch_just_considers_ptype .and. &
             subgrid_special_indices%is_vegetated_landunit(subgrido%ltype(no))) then
@@ -780,8 +780,8 @@ contains
        end if
     else if (trim(subgridi%name) == 'column' .and. trim(subgrido%name) == 'column') then
        if ( .not. glc_must_be_same_type .and. &
-            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice  .and. &
-            subgrido%ltype(no) == subgrid_special_indices%ilun_landice ) then
+            subgridi%ltype(ni) == subgrid_special_indices%ilun_landice_multiple_elevation_classes  .and. &
+            subgrido%ltype(no) == subgrid_special_indices%ilun_landice_multiple_elevation_classes ) then
           is_sametype = .true.
        else if (subgridi%ctype(ni) == subgrido%ctype(no) .and. &
                 do_fill_missing_urban_with_HD) then
