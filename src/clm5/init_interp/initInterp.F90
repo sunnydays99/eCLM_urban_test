@@ -171,10 +171,10 @@ contains
   end subroutine initInterp_readnl
 
 
-  subroutine initInterp (filei, fileo, bounds, glc_behavior)
+   subroutine initInterp (filei, fileo, bounds, glc_behavior)
 
-    !-----------------------------------------------------------------------
-    ! Read initial data from netCDF instantaneous initial data history file
+    !----------------------------------------------------------------------- 
+    ! Read initial data from netCDF instantaneous initial data history file 
     !-----------------------------------------------------------------------
 
     use decompMod, only: bounds_type
@@ -187,14 +187,14 @@ contains
     type(glc_behavior_type), intent(in) :: glc_behavior
     !
     ! local variables
-    integer            :: i,j,k,l,m,n     ! loop indices
-    integer            :: begi, endi      ! beginning/ending indices
+    integer            :: i,j,k,l,m,n     ! loop indices    
+    integer            :: begi, endi      ! beginning/ending indices 
     integer            :: bego, endo      ! beginning/ending indices
     type(interp_bounds_type) :: bounds_i  ! input file bounds
     type(interp_bounds_type) :: bounds_o  ! output file bounds
     integer            :: nlevi,nlevo     ! input/output number of levels
-    type(file_desc_t), target :: ncidi, ncido    ! input/output pio fileids
-    integer            :: dimleni,dimleno ! input/output dimension length
+    type(file_desc_t), target :: ncidi, ncido    ! input/output pio fileids 
+    integer            :: dimleni,dimleno ! input/output dimension length       
     integer            :: nvars           ! number of variables
     character(len=256) :: varname         ! variable name
     character(len=256) :: varname_i_options ! possible variable names on input file
@@ -208,32 +208,30 @@ contains
     integer            :: status          ! return code
     integer            :: iflag_interpinic
     real(r8)           :: rvalue
-    integer            :: ivalue
+    integer            :: ivalue 
     integer            :: spinup_state_i, spinup_state_o
-    integer            :: decomp_cascade_state_i, decomp_cascade_state_o
-    integer            :: npftsi, ncolsi, nlunsi, ngrcsi
-    integer            :: npftso, ncolso, nlunso, ngrcso
+    integer            :: decomp_cascade_state_i, decomp_cascade_state_o 
+    integer            :: npftsi, ncolsi, nlunsi, ngrcsi 
+    integer            :: npftso, ncolso, nlunso, ngrcso 
     logical            :: glc_elevclasses_same
-    logical            :: att_found
-    integer , allocatable, target  :: pftindx(:)
-    integer , allocatable, target  :: colindx(:)
-    integer , allocatable, target  :: lunindx(:)
-    integer , allocatable, target  :: grcindx(:)
-    logical , allocatable  :: pft_activei(:), pft_activeo(:)
-    logical , allocatable  :: col_activei(:), col_activeo(:)
-    logical , allocatable  :: lun_activei(:), lun_activeo(:)
-    logical , allocatable  :: grc_activei(:), grc_activeo(:)
-    integer , pointer      :: sgridindex(:)
+    integer , pointer  :: pftindx(:)
+    integer , pointer  :: colindx(:)     
+    integer , pointer  :: lunindx(:)     
+    integer , pointer  :: grcindx(:) 
+    logical , pointer  :: pft_activei(:), pft_activeo(:) 
+    logical , pointer  :: col_activei(:), col_activeo(:) 
+    logical , pointer  :: lun_activei(:), lun_activeo(:)
+    logical , pointer  :: grc_activei(:), grc_activeo(:)
+    integer , pointer  :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
     !--------------------------------------------------------------------
 
     if (masterproc) then
-       write (iulog,'(a)') '**** Mapping clm initial data from input '//trim(filei)//&
+       write (iulog,*) '**** Mapping clm initial data from input ',trim(filei),&
             '  to output ',trim(fileo),' ****'
     end if
-
     ! --------------------------------------------
     ! Open input and output initial conditions files
     ! --------------------------------------------
