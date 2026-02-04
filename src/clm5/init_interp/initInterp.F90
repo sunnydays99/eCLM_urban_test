@@ -707,8 +707,7 @@ contains
           call interp_2d_double(var2d_i, var2d_o, &
                begi, endi, bego, endo, &
                sgridindex, &
-               interp_multilevel_container, ncido)
-
+               interp_multilevel_container)
        else
 
           call endrun(msg='ERROR interpinic: variable NOT scalar, 1D or 2D: '//&
