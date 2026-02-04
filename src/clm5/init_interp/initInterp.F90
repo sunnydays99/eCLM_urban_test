@@ -1443,7 +1443,5 @@ contains
   end subroutine check_interp_non_ciso_to_ciso
 
 
-end module initInterpMod
-
 
 end module initInterpMod
