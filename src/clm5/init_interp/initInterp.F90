@@ -214,23 +214,22 @@ contains
     integer            :: npftsi, ncolsi, nlunsi, ngrcsi
     integer            :: npftso, ncolso, nlunso, ngrcso
     logical            :: glc_elevclasses_same
-    logical            :: att_found
-    integer , allocatable, target  :: pftindx(:)
-    integer , allocatable, target  :: colindx(:)
-    integer , allocatable, target  :: lunindx(:)
-    integer , allocatable, target  :: grcindx(:)
-    logical , allocatable  :: pft_activei(:), pft_activeo(:)
-    logical , allocatable  :: col_activei(:), col_activeo(:)
-    logical , allocatable  :: lun_activei(:), lun_activeo(:)
-    logical , allocatable  :: grc_activei(:), grc_activeo(:)
-    integer , pointer      :: sgridindex(:)
+    integer , pointer  :: pftindx(:)
+    integer , pointer  :: colindx(:)     
+    integer , pointer  :: lunindx(:)     
+    integer , pointer  :: grcindx(:) 
+    logical , pointer  :: pft_activei(:), pft_activeo(:) 
+    logical , pointer  :: col_activei(:), col_activeo(:) 
+    logical , pointer  :: lun_activei(:), lun_activeo(:)
+    logical , pointer  :: grc_activei(:), grc_activeo(:)
+    integer , pointer  :: sgridindex(:)
     type(subgrid_special_indices_type) :: subgrid_special_indices
     type(interp_multilevel_container_type) :: interp_multilevel_container
     type(interp_2dvar_type) :: var2d_i, var2d_o  ! holds metadata for 2-d variables
     !--------------------------------------------------------------------
 
     if (masterproc) then
-       write (iulog,'(a)') '**** Mapping clm initial data from input '//trim(filei)//&
+       write (iulog,*) '**** Mapping clm initial data from input ',trim(filei),&
             '  to output ',trim(fileo),' ****'
     end if
 
@@ -319,24 +318,10 @@ contains
     status = pio_get_att(ncidi, pio_global, &
          'ilun_urban_md', &
          subgrid_special_indices%ilun_urban_MD)
-
-    ! BACKWARDS_COMPATIBILITY(wjs, 2021-04-16) ilun_landice_multiple_elevation_classes has
-    ! been renamed to ilun_landice. For now we need to handle both possibilities for the
-    ! sake of old initial conditions files. There is a chance that we had ilun_landice
-    ! alongside ilun_landice_multiple_elevation_classes on really old initial conditions
-    ! files; in that case, we want to use ilun_landice_multiple_elevation_classes. Once we
-    ! can rely on all initial conditions files having the new behavior, we can remove this
-    ! check_att call and just assume there is an ilun_landice attribute.
-    call check_att(ncidi, pio_global, 'ilun_landice_multiple_elevation_classes', att_found)
-    if (att_found) then
-       status = pio_get_att(ncidi, pio_global, &
-            'ilun_landice_multiple_elevation_classes', &
-            subgrid_special_indices%ilun_landice)
-    else
-       status = pio_get_att(ncidi, pio_global, &
-            'ilun_landice', &
-            subgrid_special_indices%ilun_landice)
-    end if
+   
+    status = pio_get_att(ncidi, pio_global, &
+         'ilun_landice_multiple_elevation_classes', &
+         subgrid_special_indices%ilun_landice_multiple_elevation_classes)
 
     status = pio_get_att(ncidi, pio_global, &
          'created_glacier_mec_landunits', &
@@ -367,8 +352,8 @@ contains
             subgrid_special_indices%ilun_urban_HD
        write(iulog,*)'ilun_urban_md = ' , &
             subgrid_special_indices%ilun_urban_MD
-       write(iulog,*)'ilun_landice = ' , &
-            subgrid_special_indices%ilun_landice
+       write(iulog,*)'ilun_landice_multiple_elevation_classes = ' , &
+            subgrid_special_indices%ilun_landice_multiple_elevation_classes
        write(iulog,*)'create_glacier_mec_landunits            = ', &
             trim(created_glacier_mec_landunits)
     end if
@@ -756,20 +741,6 @@ contains
        write (iulog,*) ' Successfully created initial condition file mapped from input IC file'
     end if
 
-    sgridindex => null()
-    deallocate(pftindx)
-    deallocate(colindx)
-    deallocate(lunindx)
-    deallocate(grcindx)
-    deallocate(pft_activei)
-    deallocate(col_activei)
-    deallocate(lun_activei)
-    deallocate(grc_activei)
-    deallocate(pft_activeo)
-    deallocate(col_activeo)
-    deallocate(lun_activeo)
-    deallocate(grc_activeo)
-
   end subroutine initInterp
 
   !-----------------------------------------------------------------------
@@ -878,7 +849,7 @@ contains
 
  !=======================================================================
 
-  subroutine set_subgrid_info(beg, end, dimname, use_glob, ncid, active, subgrid, allow_scm)
+  subroutine set_subgrid_info(beg, end, dimname, use_glob, ncid, active, subgrid)
 
     ! --------------------------------------------------------------------
     ! arguments
@@ -888,7 +859,6 @@ contains
     logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
     logical            , intent(out)   :: active(beg:end)
     type(subgrid_type) , intent(inout) :: subgrid
-    logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
     !
     ! local variables
     integer              :: n
@@ -916,32 +886,32 @@ contains
     end if
 
     if (dimname == 'pft') then
-       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='pfts1d_active' , data=itemp        , dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='pfts1d_lon'    , data=subgrid%lon  , dim1name='pft', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='pfts1d_lat'    , data=subgrid%lat  , dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_itypveg', data=subgrid%ptype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_itypcol', data=subgrid%ctype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_ityplun', data=subgrid%ltype, dim1name='pft', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='pfts1d_active' , data=itemp        , dim1name='pft', use_glob=use_glob)
        if (associated(subgrid%topoglc)) then
-          call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob, allow_scm=allow_scm)
+          call read_var_double(ncid=ncid, varname='pfts1d_topoglc', data=subgrid%topoglc, dim1name='pft', use_glob=use_glob)
        end if
     else if (dimname == 'column') then
-       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='cols1d_lon'    , data=subgrid%lon  , dim1name='column', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='cols1d_lat'    , data=subgrid%lat  , dim1name='column', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='cols1d_ityp'   , data=subgrid%ctype, dim1name='column', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='cols1d_ityplun', data=subgrid%ltype, dim1name='column', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='cols1d_active' , data=itemp        , dim1name='column', use_glob=use_glob)
        if (associated(subgrid%topoglc)) then
-          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob, allow_scm=allow_scm)
+          call read_var_double(ncid=ncid, varname='cols1d_topoglc', data=subgrid%topoglc, dim1name='column', use_glob=use_glob)
        end if
     else if (dimname == 'landunit') then
-       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='land1d_lon'    , data=subgrid%lon  , dim1name='landunit', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='land1d_lat'    , data=subgrid%lat  , dim1name='landunit', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='land1d_ityplun', data=subgrid%ltype, dim1name='landunit', use_glob=use_glob)
+       call read_var_int(ncid=ncid, varname='land1d_active' , data=itemp        , dim1name='landunit', use_glob=use_glob)
     else if (dimname == 'gridcell') then
-       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob, allow_scm=allow_scm)
-       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob, allow_scm=allow_scm)
+       call read_var_double(ncid=ncid, varname='grid1d_lon'    , data=subgrid%lon  , dim1name='gridcell', use_glob=use_glob)
+       call read_var_double(ncid=ncid, varname='grid1d_lat'    , data=subgrid%lat  , dim1name='gridcell', use_glob=use_glob)
 
        ! All gridcells in the restart file are active
        itemp(beg:end) = 1
@@ -962,7 +932,7 @@ contains
 
   contains
 
-    subroutine read_var_double(ncid, varname, data, dim1name, use_glob, allow_scm)
+    subroutine read_var_double(ncid, varname, data, dim1name, use_glob)
       ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
       ! form of ncd_io
       type(file_desc_t)  , intent(inout) :: ncid
@@ -970,25 +940,11 @@ contains
       real(r8), pointer  , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-      logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
-
-      ! local
-      character(16)                      :: readflag
-
-      if (allow_scm) then
-         readflag='read'
-      else
-         ! Flag to distinguish the times during IC interpolation when running in single column mode but
-         ! need to read the full data grid. Normally single_column means
-         ! "read the data grid and extract the closest column" but
-         ! during IC interpolation you need to read in the full grid to be interpolated regardless of the single_column flag.
-         readflag='read_noscm'
-      endif
 
       if (use_glob) then
-         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data)
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
       else
-         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data, dim1name=dim1name)
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
       end if
     end subroutine read_var_double
 
@@ -1000,30 +956,15 @@ contains
       integer, pointer   , intent(inout) :: data(:)
       character(len=*)   , intent(in)    :: dim1name
       logical            , intent(in)    :: use_glob  ! if .true., use the 'glob' form of ncd_io
-      logical            , intent(in)    :: allow_scm  ! if .true., allow single column model subset of data
-
-      ! local
-      character(16)                      :: readflag
-
-      if (allow_scm) then
-         readflag='read'
-      else
-         ! Flag to distinguish the times during IC interpolation when running in single column mode but
-         ! need to read the full data grid. Normally single_column means
-         ! "read the data grid and extract the closest column" but
-         ! during IC interpolation you need to read in the full grid to be interpolated regardless of the single_column flag.
-         readflag='read_noscm'
-      endif
-
+     
       if (use_glob) then
-         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data)
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data)
       else
-         call ncd_io(ncid=ncid, varname=varname, flag=trim(readflag), data=data, dim1name=dim1name)
+         call ncd_io(ncid=ncid, varname=varname, flag='read', data=data, dim1name=dim1name)
       end if
     end subroutine read_var_int
 
   end subroutine set_subgrid_info
-
   !=======================================================================
 
   subroutine interp_0d_copy (varname, varname_i, xtype, ncidi, ncido)
@@ -1086,7 +1027,7 @@ contains
     end if
 
     allocate (rbufsli(begi:endi), rbufslo(bego:endo))
-    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read_noscm', data=rbufsli)
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', data=rbufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', data=rbufslo, &
          dim1name=dimname)
 
@@ -1128,7 +1069,7 @@ contains
 
     allocate (ibufsli(begi:endi), ibufslo(bego:endo))
 
-    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read_noscm', &
+    call ncd_io(ncid=ncidi, varname=trim(varname_i), flag='read', &
          data=ibufsli)
     call ncd_io(ncid=ncido, varname=trim(varname), flag='read', &
          data=ibufslo, dim1name=dimname)
@@ -1239,129 +1180,7 @@ contains
   end subroutine interp_2d_double
   !=======================================================================
 
-  subroutine check_dim_subgrid(ncidi, ncido, dimname, dimleni, dimleno)
-
-    ! --------------------------------------------------------------------
-    ! arguments
-    type(file_desc_t) , intent(inout) :: ncidi
-    type(file_desc_t) , intent(inout) :: ncido
-    character(len=*)  , intent(in)    :: dimname
-    integer           , intent(out)   :: dimleni
-    integer           , intent(out)   :: dimleno
-    !
-    ! local variables
-    integer :: status
-    integer :: dimid
-    ! --------------------------------------------------------------------
-
-    status = pio_inq_dimid (ncidi, dimname, dimid)
-    status = pio_inq_dimlen(ncidi, dimid  , dimleni)
-    status = pio_inq_dimid (ncido, dimname, dimid)
-    status = pio_inq_dimlen(ncido, dimid  , dimleno)
-
-  end subroutine check_dim_subgrid
-
-  !=======================================================================
-
-  subroutine check_dim_level(ncidi, ncido, dimname, must_be_same)
-    ! Checks whether dimension size is the same for input and output. If 'must_be_same'
-    ! is true, aborts if they disagree; otherwise, simply prints an informative message.
-
-    ! --------------------------------------------------------------------
-    ! arguments
-    type(file_desc_t) , intent(inout) :: ncidi
-    type(file_desc_t) , intent(inout) :: ncido
-    character(len=*)  , intent(in)    :: dimname
-    logical           , intent(in)    :: must_be_same
-    !
-    ! local variables
-    integer :: status
-    integer :: dimid
-    integer :: dimleni, dimleno
-    ! --------------------------------------------------------------------
-
-    status = pio_inq_dimid (ncidi, dimname, dimid)
-    status = pio_inq_dimlen(ncidi, dimid  , dimleni)
-    status = pio_inq_dimid (ncido, dimname, dimid)
-    status = pio_inq_dimlen(ncido, dimid  , dimleno)
-
-    if (dimleni /= dimleno) then
-       if (must_be_same) then
-          write (iulog,*) 'ERROR interpinic: input and output ',trim(dimname),' values disagree'
-          write (iulog,*) 'input dimlen = ',dimleni,' output dimlen = ',dimleno
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       else
-          if (masterproc) then
-             write (iulog,*) 'input and output ',trim(dimname),' values disagree'
-             write (iulog,*) 'input nlevgrnd = ',dimleni,' output nlevgrnd = ',dimleno
-             write (iulog,*) 'This is okay: vertical levels will be interpolated'
-          end if
-       end if
-    end if
-
-  end subroutine check_dim_level
-
-  !-----------------------------------------------------------------------
-  subroutine limit_snlsno(ncido, bounds_o)
-    !
-    ! !DESCRIPTION:
-    ! Apply a limit to SNLSNO in the output file so that it doesn't exceed the number of
-    ! snow layers.
-    !
-    ! This is needed if the output file has fewer snow layers than the input file.
-    !
-    ! !USES:
-    !
-    ! !ARGUMENTS:
-    type(file_desc_t)       , intent(inout) :: ncido
-    type(interp_bounds_type), intent(in)    :: bounds_o
-    !
-    ! !LOCAL VARIABLES:
-    character(len=16) :: vec_dimname
-    integer :: bego, endo
-    integer, pointer :: snlsno(:)
-    integer :: snlsno_dids(1)  ! dimension ID
-    integer :: levsno_dimid
-    integer :: levsno
-    integer :: i
-    integer :: err_code
-
-    character(len=*), parameter :: levsno_dimname = 'levsno'
-    character(len=*), parameter :: snlsno_varname = 'SNLSNO'
-
-    character(len=*), parameter :: subname = 'limit_snlsno'
-    !-----------------------------------------------------------------------
-
-    ! Determine levsno size
-    call ncd_inqdlen(ncid=ncido, dimid=levsno_dimid, len=levsno, name=levsno_dimname)
-
-    ! Read SNLSNO
-    !
-    ! TODO(wjs, 2015-11-01) This is a lot of code for simply reading in a 1-d variable.
-    ! It would be nice if there was a routine that did all of this for you, similarly to
-    ! what initInterp2dvar does for 2-d variables.
-    call ncd_inqvdname(ncid=ncido, varname=snlsno_varname, dimnum=1, dname=vec_dimname, &
-         err_code=err_code)
-    if (err_code /= 0) then
-       call endrun(subname//' ERROR getting vec_dimname')
-    end if
-    bego = bounds_o%get_beg(vec_dimname)
-    endo = bounds_o%get_end(vec_dimname)
-    allocate(snlsno(bego:endo))
-    call ncd_io(ncid=ncido, varname=snlsno_varname, flag='read', data=snlsno, &
-         dim1name=trim(vec_dimname))
-
-    ! Limit SNLSNO
-    do i = bego, endo
-       ! Note that snlsno is negative
-       snlsno(i) = max(snlsno(i), -1*levsno)
-    end do
-
-    ! Write out limited SNLSNO
-    call ncd_io(ncid=ncido, varname=snlsno_varname, flag='write', data=snlsno, &
-         dim1name=trim(vec_dimname))
-    deallocate(snlsno)
-  end subroutine limit_snlsno
+  s
 
   !-----------------------------------------------------------------------
   subroutine check_interp_non_ciso_to_ciso(ncidi)
@@ -1427,7 +1246,7 @@ contains
           write(iulog,*) 'Proceeding despite missing c13 and/or c14 fields on input finidat file,'
           write(iulog,*) 'because for_testing_allow_interp_non_ciso_to_ciso is set.'
           write(iulog,*) ' '
-       else if (masterproc) then
+       else
           write(iulog,*) ' '
           write(iulog,*) 'for_testing_allow_interp_non_ciso_to_ciso is .true., but it appears to be unnecessary in this run'
           write(iulog,*) '(this is informational only - it does not indicate a problem)'
