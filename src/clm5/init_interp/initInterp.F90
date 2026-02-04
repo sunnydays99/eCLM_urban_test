@@ -459,7 +459,7 @@ contains
     if (masterproc) then
        write(iulog,*)'setting up interpolators for multi-level variables'
     end if
-    call interp_multilevel_container%init( &
+    interp_multilevel_container = interp_multilevel_container_type( &
          ncid_source = ncidi, ncid_dest = ncido, &
          bounds_source = bounds_i, bounds_dest = bounds_o, &
          pftindex = pftindx, colindex = colindx)
