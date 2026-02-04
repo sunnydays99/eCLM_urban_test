@@ -809,13 +809,13 @@ contains
        write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for input'
     end if
     call set_subgrid_info(beg=begi, end=endi, dimname=dimname, use_glob=.true., &
-         ncid=ncidi, active=activei, subgrid=subgridi, allow_scm=.false.)
+         ncid=ncidi, active=activei, subgrid=subgridi)
 
     if (masterproc) then
        write(iulog,*)'calling set_subgrid_info for ',trim(dimname), ' for output'
     end if
     call set_subgrid_info(beg=bego, end=endo, dimname=dimname, use_glob=.false., &
-         ncid=ncido, active=activeo, subgrid=subgrido, allow_scm=.true.)
+         ncid=ncido, active=activeo, subgrid=subgrido)
 
     select case (interp_method)
     case (interp_method_general)
@@ -948,7 +948,7 @@ contains
       end if
     end subroutine read_var_double
 
-    subroutine read_var_int(ncid, varname, data, dim1name, use_glob, allow_scm)
+    subroutine read_var_int(ncid, varname, data, dim1name, use_glob)
       ! Wraps the ncd_io call, providing logic related to whether we're using the 'glob'
       ! form of ncd_io
       type(file_desc_t)  , intent(inout) :: ncid
