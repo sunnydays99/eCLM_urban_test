@@ -308,14 +308,13 @@ contains
           else if (distmin == spval &
                .and. do_fill_missing_urban_with_HD( &
                fill_missing_urban_with_HD, no, subgrido, subgrid_special_indices)) then
+             if (subgrido%name /= 'landunit') then
+                 cycle
+             end if
+
              do ni = begi, endi
                 if (activei(ni)) then
-                   ! We need to call is_sametype for pfts and columns here to make sure that each
-                   ! urban input pft and column type matches the output pft and column type. We don't
-                   ! want to call it for landunits because they intentionally won't be the same type
-                   ! (since we are filling missing urban landunits with HD)
-                   if (subgrido%name .eq. 'landunit') then
-                      if ( is_urban_HD(ni, subgridi, subgrid_special_indices)) then
+                   if ( is_urban_HD(ni, subgridi, subgrid_special_indices)) then
                          dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
                          dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
                               0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
@@ -324,25 +323,6 @@ contains
                             distmin = dist
                             nmin = ni
                          end if
-                      end if
-                   else
-                      if (is_sametype(ni = ni, no = no, &
-                          subgridi = subgridi, subgrido = subgrido, &
-                          subgrid_special_indices = subgrid_special_indices, &
-                          glc_must_be_same_type = glc_must_be_same_type_o(no), &
-                          veg_patch_just_considers_ptype = .false., &
-                          do_fill_missing_urban_with_HD = .true.)) then
-                         if ( is_urban_HD(ni, subgridi, subgrid_special_indices)) then
-                            dy = abs(subgrido%lat(no)-subgridi%lat(ni))*re
-                            dx = abs(subgrido%lon(no)-subgridi%lon(ni))*re * &
-                                 0.5_r8*(subgrido%coslat(no)+subgridi%coslat(ni))
-                            dist = dx*dx + dy*dy
-                            if ( dist < distmin )then
-                               distmin = dist
-                               nmin = ni
-                            end if
-                         end if
-                      end if
                    end if
                 end if
              end do
