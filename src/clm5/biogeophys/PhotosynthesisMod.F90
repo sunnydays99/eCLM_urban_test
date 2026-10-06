@@ -49,7 +49,7 @@ module  PhotosynthesisMod
   public :: plc                           ! Return value of vulnerability curve at x
 
   ! !PRIVATE MEMBER FUNCTIONS:
-  private :: hybrid         ! hybrid solver for ci
+  private :: hybrid         ! hybrid solver for 
   private :: ci_func        ! ci function
   private :: brent          ! brent solver for root of a single variable function
   private :: ft             ! photosynthesis temperature response
@@ -5619,9 +5619,6 @@ contains
 											   ! derived from SCOPE with chlorophyll content of 40 ug/m2, calc_PSI = 0
 	
 	associate(                                           &
-
-         CI           =>    pftcon%CI_pft                       , & ! Input:  ecophys const - leaf/stem orientation index
-
          elai        => canopystate_inst%elai_patch    , & ! Input: [real(r8) (:)   ]  one-sided leaf area index with burying by snow
          esai        => canopystate_inst%esai_patch    , & ! Input:  [real(r8) (:)   ]  one-sided stem area index with burying by snow
 
@@ -5653,15 +5650,15 @@ contains
        if (.not. use_fates) then
 		if (fsif(p) > 0._r8 .AND. (fsds_i(p)+fsds_d(p))>0._r8) then
 
-		  i0s=(fsds_i(p) * exp((-elai(p)-esai(p))*CI(patch%itype(p)))+fsds_d(p)*ftdd(p,numrad))/(fsds_i(p)+fsds_d(p)) 
+		  i0s=(fsds_i(p) * exp((-elai(p)-esai(p)))+fsds_d(p)*ftdd(p,numrad))/(fsds_i(p)+fsds_d(p)) 
 		  i0v=1._r8-i0s
 		  Rc=(fsds_i(p) * albi(p,numrad)+fsds_d(p)*albd(p,numrad))/(fsds_i(p)+fsds_d(p))
 
-		  Rs=(fsds_i(p) * exp((-elai(p)-esai(p))*CI(patch%itype(p))) * albgri(c,numrad)+fsds_d(p)*ftdd(p,numrad)*albgrd(c,numrad)) / (fsds_i(p)+fsds_d(p)) * ftii(p,numrad)
+		  Rs=(fsds_i(p) * exp((-elai(p)-esai(p))) * albgri(c,numrad)+fsds_d(p)*ftdd(p,numrad)*albgrd(c,numrad)) / (fsds_i(p)+fsds_d(p)) * ftii(p,numrad)
 		  Rv=Rc-Rs
 		  Rcn=(fsds_i(p) * refi(p,numrad) + fsds_d(p) * refd(p,numrad)) / (fsds_i(p) + fsds_d(p))
 
-		  Rsn=(fsds_i(p) * exp((-elai(p)-esai(p))*CI(patch%itype(p))) * albgri(c,numrad)+fsds_d(p)*ftdd(p,numrad)*albgrd(c,numrad)) / (fsds_i(p)+fsds_d(p)) * (ftin(p,numrad)+ftnn(p,numrad))
+		  Rsn=(fsds_i(p) * exp((-elai(p)-esai(p))) * albgri(c,numrad)+fsds_d(p)*ftdd(p,numrad)*albgrd(c,numrad)) / (fsds_i(p)+fsds_d(p)) * (ftin(p,numrad)+ftnn(p,numrad))
 		  Rvn=Rcn-Rsn
 		  if (i0v > 0._r8 .AND. omega(p,numrad) > 0._r8 ) then
 			sifesc(p)=fsif(p) * Rv / i0v / omega(p,numrad) !
