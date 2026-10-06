@@ -1190,6 +1190,7 @@ contains
      real(r8) :: gdir(bounds%begp:bounds%endp)    ! leaf projection in solar direction (0 to 1)
      real(r8) :: twostext(bounds%begp:bounds%endp)! optical depth of direct beam per unit leaf area
      real(r8) :: avmu(bounds%begp:bounds%endp)    ! average diffuse optical depth
+     real(r8) :: omega(bounds%begp:bounds%endp,numrad)
      real(r8) :: omegal           ! omega for leaves
      real(r8) :: betai            ! upscatter parameter for diffuse radiation
      real(r8) :: betail           ! betai for leaves
@@ -1254,8 +1255,6 @@ contains
 
    associate(&
           xl           =>    pftcon%xl                           , & ! Input:  ecophys const - leaf/stem orientation index
-
-          CI           =>    pftcon%CI_pft                       , & ! Input:  ecophys const - leaf/stem orientation index
 
           t_veg        =>    temperature_inst%t_veg_patch        , & ! Input:  [real(r8) (:)   ]  vegetation temperature (Kelvin)         
 
@@ -1473,17 +1472,12 @@ contains
           ! Absorbed, reflected, transmitted fluxes per unit incoming radiation
           ! for full canopy
 
-!          t1 = min(h*(elai(p)+esai(p)), 40._r8)
- 		  t1 = min(1._r8 / avmu(p)*(elai(p)+esai(p)), 40._r8)*CI(patch%itype(p))
-		  tii(p,ib) = exp(-t1)																	   
-          t1 = min(h*(elai(p)+esai(p)), 40._r8)*CI(patch%itype(p)) 
+          t1 = min(h*(elai(p)+esai(p)), 40._r8)
           s1 = exp(-t1)
-!          t1 = min(twostext(p)*(elai(p)+esai(p)), 40._r8)
-          t1 = min(twostext(p)*(elai(p)+esai(p)), 40._r8)*CI(patch%itype(p)) 
+          t1 = min(twostext(p)*(elai(p)+esai(p)), 40._r8)
           s2 = exp(-t1)
  
-!		  t2 = min(vtwostext(p)*(elai(p)+esai(p)), 40._r8)
-		  t2 = min(vtwostext(p)*(elai(p)+esai(p)), 40._r8)*CI(patch%itype(p)) 
+		  t2 = min(vtwostext(p)*(elai(p)+esai(p)), 40._r8)
           s3 = exp(-t2)
 		  ftnn(p,ib) = s3
 	  
@@ -1528,8 +1522,7 @@ contains
           vp2 = vb - avmu(p)*vh
           vp3 = vb + vtmp0
           vp4 = vb - vtmp0
-!		  t2 = min(vh*(elai(p)+esai(p)), 40._r8)
-		  t2 = min(vh*(elai(p)+esai(p)), 40._r8)*CI(patch%itype(p)) 	
+		  t2 = min(vh*(elai(p)+esai(p)), 40._r8)
           s4 = exp(-t2)
 		  if ( .not. lSFonly )then
              vu1 = vb - vc1/albgrd(c,ib)  !!!!! albgrd varies with viewing angle for Unfrozen lake 
@@ -1670,12 +1663,10 @@ contains
                if (nlevcan == 1) then
   
                   ! sunlit fraction of canopy
-!                  fsun_z(p,1) = (1._r8 - s2) / t1
-                  fsun_z(p,1) = (1._r8 - s2) / t1*CI(patch%itype(p))
+                  fsun_z(p,1) = (1._r8 - s2) / t1
   
                   ! absorbed PAR (per unit sun/shade lai+sai)
                   laisum = elai(p)+esai(p)
-!                  laisum = (elai(p)+esai(p))*CI(patch%itype(p))
                   fabd_sun_z(p,1) = fabd_sun(p,ib) / (fsun_z(p,1)*laisum)
                   fabi_sun_z(p,1) = fabi_sun(p,ib) / (fsun_z(p,1)*laisum)
                   fabd_sha_z(p,1) = fabd_sha(p,ib) / ((1._r8 - fsun_z(p,1))*laisum)
@@ -1684,14 +1675,12 @@ contains
   
                   ! leaf to canopy scaling coefficients
                   extkn = 0.30_r8
+				  extkb = twostext(p)
+                  vcmaxcintsun(p) = (1._r8 - exp(-(extkn+extkb)*elai(p))) / (extkn + extkb)
+                  vcmaxcintsha(p) = (1._r8 - exp(-extkn*elai(p))) / extkn - vcmaxcintsun(p)
 
                   if (elai(p)  >  0._r8) then
-				    extkb = twostext(p)*CI(patch%itype(p))*(elai(p)+esai(p))/(elai(p))                  
-!					vcmaxcintsun(p) = (1._r8 - exp(-(extkn+extkb)*elai(p))) / (extkn + extkb)
-					vcmaxcintsun(p) = CI(patch%itype(p))*(1._r8 - exp(-(extkn+extkb)*elai(p))) / (extkn + extkb*CI(patch%itype(p)))
-					vcmaxcintsha(p) = (1._r8 - exp(-extkn*elai(p))) / extkn - vcmaxcintsun(p)
-!
-					vcmaxcintsun(p) = vcmaxcintsun(p) / (fsun_z(p,1)*elai(p))
+				    vcmaxcintsun(p) = vcmaxcintsun(p) / (fsun_z(p,1)*elai(p))
                     vcmaxcintsha(p) = vcmaxcintsha(p) / ((1._r8 - fsun_z(p,1))*elai(p))
                   else
                     vcmaxcintsun(p) = 0._r8
@@ -1704,11 +1693,9 @@ contains
                      ! Cumulative lai+sai at center of layer
   
                      if (iv == 1) then
-!                        laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))
-                       laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))*CI(patch%itype(p)) 	!rl CI $$$$
+                       laisum = 0.5_r8 * (tlai_z(p,iv)+tsai_z(p,iv))
                      else
-!                        laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))
-                       laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))*CI(patch%itype(p)) 	!rl CI $$$$
+                       laisum = laisum + 0.5_r8 * ((tlai_z(p,iv-1)+tsai_z(p,iv-1))+(tlai_z(p,iv)+tsai_z(p,iv)))
                      end if
   
                      ! Coefficients s1 and s2 depend on cumulative lai+sai. s2 is the sunlit fraction
