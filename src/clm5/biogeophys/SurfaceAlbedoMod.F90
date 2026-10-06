@@ -1471,15 +1471,19 @@ contains
 
           ! Absorbed, reflected, transmitted fluxes per unit incoming radiation
           ! for full canopy
+          ! SIF: unscattered diffuse transmittance (Li et al. 2022, CI = 1)
+          t2 = min(1._r8 / avmu(p)*(elai(p)+esai(p)), 40._r8)
+          tii(p,ib) = exp(-t2)
 
           t1 = min(h*(elai(p)+esai(p)), 40._r8)
           s1 = exp(-t1)
           t1 = min(twostext(p)*(elai(p)+esai(p)), 40._r8)
           s2 = exp(-t1)
- 
-		  t2 = min(vtwostext(p)*(elai(p)+esai(p)), 40._r8)
+
+          ! SIF: nadir transmittance
+          t2 = min(vtwostext(p)*(elai(p)+esai(p)), 40._r8)
           s3 = exp(-t2)
-		  ftnn(p,ib) = s3
+          ftnn(p,ib) = s3
 	  
           ! Direct beam
           if ( .not. lSFonly )then
@@ -1646,11 +1650,20 @@ contains
 			refd_can(p,ib) = h11 * (1._r8 - s2 * s3)/ (twostext(p) + vtwostext(p)) + h12 * (1._r8 - s1 * s3)/ (h + vtwostext(p))  + h13 * (1._r8 - s3 / s1)/ (vtwostext(p) - h)
             ! Diffuse Canopy
 			refi_can(p,ib) = h14 * (1._r8 - s3*s1) / (vtwostext(p) + h) +  h15 * (1._r8 - s3/s1) / (vtwostext(p) - h)
-			if (abs(vtwostext(p) - h) < 0.000001_r8)then
 
-			refd_can(p,ib) = h11 * (1._r8 - s2 * s3)/ (twostext(p) + vtwostext(p)) + h12 * (1._r8 - s1 * s3)/ (h + vtwostext(p))  + h13 * ((elai(p)+esai(p))*CI(patch%itype(p)) + 0.50_r8*(elai(p)+esai(p))*CI(patch%itype(p))*(elai(p)+esai(p))*CI(patch%itype(p))*(h-vtwostext(p)))
-			refi_can(p,ib) = h14 * (1._r8 - s3*s1) / (vtwostext(p) + h) +  h15 * ((elai(p)+esai(p))*CI(patch%itype(p)) + 0.50_r8*(elai(p)+esai(p))*CI(patch%itype(p))*(elai(p)+esai(p))*CI(patch%itype(p))*(h-vtwostext(p))) 	!rl CI ****
-			end if
+            if (abs(vtwostext(p) - h) < 1.e-6_r8) then
+               refd_can(p,ib) = h11*(1._r8 - s2*s3)/(twostext(p) + vtwostext(p)) &
+                              + h12*(1._r8 - s1*s3)/(h + vtwostext(p)) &
+                              + h13*((elai(p)+esai(p)) + 0.5_r8*(elai(p)+esai(p))**2*(h - vtwostext(p)))
+               refi_can(p,ib) = h14*(1._r8 - s3*s1)/(vtwostext(p) + h) &
+                              + h15*((elai(p)+esai(p)) + 0.5_r8*(elai(p)+esai(p))**2*(h - vtwostext(p)))
+            else
+               refd_can(p,ib) = h11*(1._r8 - s2*s3)/(twostext(p) + vtwostext(p)) &
+                              + h12*(1._r8 - s1*s3)/(h + vtwostext(p)) &
+                              + h13*(1._r8 - s3/s1)/(vtwostext(p) - h)
+               refi_can(p,ib) = h14*(1._r8 - s3*s1)/(vtwostext(p) + h) &
+                              + h15*(1._r8 - s3/s1)/(vtwostext(p) - h)
+            end if
 
             ! Ground
 			refd_gr(p,ib) = (s2 * albgrd(c,ib) + ftid(p,ib) * albgri(c,ib)) * s3 ! Direct Ground
