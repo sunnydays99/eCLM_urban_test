@@ -449,8 +449,8 @@ contains
         g = patch%gridcell(p)
         
         do iv = 1, nrad(p)
-           parsun_z(p,iv) = forc_solad(g,ipar)*fabd_sun_z(p,iv)*0.87 + forc_solai(g,ipar)*fabi_sun_z(p,iv)*0.87
-           parsha_z(p,iv) = forc_solad(g,ipar)*fabd_sha_z(p,iv)*0.87 + forc_solai(g,ipar)*fabi_sha_z(p,iv)*0.87
+           parsun_z(p,iv) = forc_solad(g,ipar)*fabd_sun_z(p,iv) + forc_solai(g,ipar)*fabi_sun_z(p,iv)
+           parsha_z(p,iv) = forc_solad(g,ipar)*fabd_sha_z(p,iv) + forc_solai(g,ipar)*fabi_sha_z(p,iv)
         end do
         
      end do ! end of fp = 1,num_nourbanp loop
