@@ -21,7 +21,6 @@ module CanopyFluxesMod
   use decompMod             , only : bounds_type
   use PhotosynthesisMod     , only : Photosynthesis, PhotoSynthesisHydraulicStress, PhotosynthesisTotal, Fractionation
   use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-  use EDBtranMod            , only : btran_ed
   use SoilMoistStressMod    , only : calc_effective_soilporosity, calc_volumetric_h2oliq
   use SoilMoistStressMod    , only : calc_root_moist_stress, set_perchroot_opt
   use SimpleMathMod         , only : array_div_vector
@@ -454,6 +453,10 @@ contains
          t_ref2m                => temperature_inst%t_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (Kelvin)                           
          t_ref2m_r              => temperature_inst%t_ref2m_r_patch             , & ! Output: [real(r8) (:)   ]  Rural 2 m height surface air temperature (Kelvin)                     
          t_skin_patch           => temperature_inst%t_skin_patch                , & ! Output: [real(r8) (:)   ]  patch skin temperature (K)  
+#ifdef COUP_OAS_ICON
+         t_sf_patch             => temperature_inst%t_sf_patch                  , & ! Output: [real(r8) (:)   ]  patch surface temperature (K)
+!         q_sf_patch             => waterstate_inst%q_sf_patch                   , & ! Output: [real(r8) (:)   ]  patch surface humidity (kg/kg)
+#endif
 
          frac_h2osfc            => waterstate_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterstate_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
@@ -1178,6 +1181,10 @@ contains
          delq_h2osfc = wtalq(p)*qg_h2osfc(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
          qflx_ev_h2osfc(p) = forc_rho(c)*wtgq(p)*delq_h2osfc
 
+#ifdef COUP_OAS_ICON
+         t_sf_patch(p)  = taf(p)
+!         q_sf(p)  = qaf(p)
+#endif
          ! 2 m height air temperature
 
          t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
@@ -1284,13 +1291,9 @@ contains
       else
 
          ! Determine total photosynthesis
-         ! Modified to include SIF simulation        
-!         call PhotosynthesisTotal(fn, filterp, &
-!              atm2lnd_inst, canopystate_inst, photosyns_inst)
-		  call PhotosynthesisTotal (fn, filterp, &
-			   atm2lnd_inst, canopystate_inst, photosyns_inst, &
-	   bounds,surfalb_inst, solarabs_inst)
-
+         
+         call PhotosynthesisTotal(fn, filterp, &
+              atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate ozone stress. This needs to be done after rssun and rsshade are
          ! computed by the Photosynthesis routine. However, Photosynthesis also uses the
