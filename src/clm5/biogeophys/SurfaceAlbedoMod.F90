@@ -1190,7 +1190,6 @@ contains
      real(r8) :: gdir(bounds%begp:bounds%endp)    ! leaf projection in solar direction (0 to 1)
      real(r8) :: twostext(bounds%begp:bounds%endp)! optical depth of direct beam per unit leaf area
      real(r8) :: avmu(bounds%begp:bounds%endp)    ! average diffuse optical depth
-     real(r8) :: omega(bounds%begp:bounds%endp,numrad)
      real(r8) :: omegal           ! omega for leaves
      real(r8) :: betai            ! upscatter parameter for diffuse radiation
      real(r8) :: betail           ! betai for leaves
@@ -1646,11 +1645,7 @@ contains
             ! and also canopy-integrated scaling coefficients
             ! for nadir viewing
             ! Radiation at viewing angle
-            ! Direct Canopy
-			refd_can(p,ib) = h11 * (1._r8 - s2 * s3)/ (twostext(p) + vtwostext(p)) + h12 * (1._r8 - s1 * s3)/ (h + vtwostext(p))  + h13 * (1._r8 - s3 / s1)/ (vtwostext(p) - h)
-            ! Diffuse Canopy
-			refi_can(p,ib) = h14 * (1._r8 - s3*s1) / (vtwostext(p) + h) +  h15 * (1._r8 - s3/s1) / (vtwostext(p) - h)
-
+           
             if (abs(vtwostext(p) - h) < 1.e-6_r8) then
                refd_can(p,ib) = h11*(1._r8 - s2*s3)/(twostext(p) + vtwostext(p)) &
                               + h12*(1._r8 - s1*s3)/(h + vtwostext(p)) &
